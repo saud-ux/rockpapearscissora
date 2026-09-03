@@ -137,8 +137,8 @@ socket.on('round-started', (data) => {
   document.getElementById('timer-play').classList.remove('urgent');
   const modeEl = document.getElementById('round-mode-play');
   if (modeEl) {
-    modeEl.textContent = data.mode === 'pvp' ? '⚔️ لاعب ضد لاعب' : '🖥️ ضد الكمبيوتر';
-    modeEl.className = 'round-mode ' + (data.mode === 'pvp' ? 'mode-pvp' : 'mode-cpu');
+    modeEl.textContent = '⚔️ لاعب ضد لاعب';
+    modeEl.className = 'round-mode mode-pvp';
   }
 });
 
@@ -169,74 +169,42 @@ socket.on('round-result', (data) => {
   const modeBadge = document.getElementById('result-mode-badge');
   let html = '';
 
-  if (data.mode === 'pvp') {
-    computerLine.classList.add('hidden');
-    if (modeBadge) modeBadge.textContent = '⚔️ لاعب ضد لاعب';
+  computerLine.classList.add('hidden');
+  if (modeBadge) modeBadge.textContent = '⚔️ لاعب ضد لاعب';
 
-    if (data.pairs && data.pairs.length > 0) {
-      html += '<div class="section-title" style="margin-top:0;">المواجهات ⚔️</div>';
-      data.pairs.forEach(pair => {
-        const p1c = choiceEmojiShort[pair.player1.choice] || '❓';
-        const p2c = choiceEmojiShort[pair.player2.choice] || '❓';
-        let resultText, cls;
-        if (pair.outcome === 'player1') {
-          resultText = `فاز ${escapeHtml(pair.player1.name)} ✅`;
-          cls = 'winners';
-        } else if (pair.outcome === 'player2') {
-          resultText = `فاز ${escapeHtml(pair.player2.name)} ✅`;
-          cls = 'losers';
-        } else {
-          resultText = 'تعادل 🔄';
-          cls = 'draw';
-        }
-        html += `<div class="result-group ${cls}">
-          <div class="result-group-header">${escapeHtml(pair.player1.name)} ${p1c} ⚔️ ${p2c} ${escapeHtml(pair.player2.name)}</div>
-          <div class="result-names">${resultText}</div>
-        </div>`;
-      });
-    }
-
-    if (data.soloPlayer) {
-      const sc = choiceEmojiShort[data.soloPlayer.choice] || '❓';
-      const cc = choiceEmojiShort[data.soloPlayer.computerChoice] || '❓';
-      const o = data.soloPlayer.outcome;
-      const cls = o === 'win' ? 'winners' : o === 'lose' ? 'losers' : 'draw';
-      const txt = o === 'win' ? 'فاز ✅' : o === 'lose' ? 'خسر ❌' : 'تعادل 🔄';
+  if (data.pairs && data.pairs.length > 0) {
+    html += '<div class="section-title" style="margin-top:0;">المواجهات ⚔️</div>';
+    data.pairs.forEach(pair => {
+      const p1c = choiceEmojiShort[pair.player1.choice] || '❓';
+      const p2c = choiceEmojiShort[pair.player2.choice] || '❓';
+      let resultText, cls;
+      if (pair.outcome === 'player1') {
+        resultText = `فاز ${escapeHtml(pair.player1.name)} ✅`;
+        cls = 'winners';
+      } else if (pair.outcome === 'player2') {
+        resultText = `فاز ${escapeHtml(pair.player2.name)} ✅`;
+        cls = 'losers';
+      } else {
+        resultText = 'تعادل 🔄';
+        cls = 'draw';
+      }
       html += `<div class="result-group ${cls}">
-        <div class="result-group-header">🖥️ ${escapeHtml(data.soloPlayer.name)} ${sc} ضد ${cc} الكمبيوتر</div>
-        <div class="result-names">${txt}</div>
+        <div class="result-group-header">${escapeHtml(pair.player1.name)} ${p1c} ⚔️ ${p2c} ${escapeHtml(pair.player2.name)}</div>
+        <div class="result-names">${resultText}</div>
       </div>`;
-    }
-  } else {
-    computerLine.classList.remove('hidden');
-    document.getElementById('computer-choice-display').textContent = choiceEmoji[data.computerChoice];
-    if (modeBadge) modeBadge.textContent = '🖥️ ضد الكمبيوتر';
+    });
+  }
 
-    const winners = data.results.filter(r => r.outcome === 'win');
-    const draws = data.results.filter(r => r.outcome === 'draw');
-    const losers = data.results.filter(r => r.outcome === 'lose');
-
-    if (winners.length > 0) {
-      const choice = choiceEmoji[winners[0].choice];
-      html += `<div class="result-group winners">
-        <div class="result-group-header">${choice} (${winners.length} لاعبين) — فازوا ✅</div>
-        <div class="result-names">${winners.map(w => escapeHtml(w.name)).join('، ')}</div>
-      </div>`;
-    }
-    if (draws.length > 0) {
-      const choice = choiceEmoji[draws[0].choice];
-      html += `<div class="result-group draw">
-        <div class="result-group-header">${choice} (${draws.length} لاعبين) — تعادل 🔄</div>
-        <div class="result-names">${draws.map(d => escapeHtml(d.name)).join('، ')}</div>
-      </div>`;
-    }
-    if (losers.length > 0) {
-      const choice = choiceEmoji[losers[0].choice];
-      html += `<div class="result-group losers">
-        <div class="result-group-header">${choice} (${losers.length} لاعبين) — خسروا ❌</div>
-        <div class="result-names">${losers.map(l => escapeHtml(l.name)).join('، ')}</div>
-      </div>`;
-    }
+  if (data.soloPlayer) {
+    const sc = choiceEmojiShort[data.soloPlayer.choice] || '❓';
+    const cc = choiceEmojiShort[data.soloPlayer.computerChoice] || '❓';
+    const o = data.soloPlayer.outcome;
+    const cls = o === 'win' ? 'winners' : o === 'lose' ? 'losers' : 'draw';
+    const txt = o === 'win' ? 'فاز ✅' : o === 'lose' ? 'خسر ❌' : 'تعادل 🔄';
+    html += `<div class="result-group ${cls}">
+      <div class="result-group-header">🖥️ ${escapeHtml(data.soloPlayer.name)} ${sc} ضد ${cc} الكمبيوتر</div>
+      <div class="result-names">${txt}</div>
+    </div>`;
   }
 
   if (data.noVote && data.noVote.length > 0) {

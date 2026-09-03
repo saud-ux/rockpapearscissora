@@ -80,7 +80,7 @@ socket.on('round-started', (data) => {
   document.getElementById('timer-player').classList.remove('urgent');
   const modeEl = document.getElementById('round-mode-player');
   if (modeEl) {
-    modeEl.textContent = data.mode === 'pvp' ? '⚔️ ضد لاعب' : '🖥️ ضد الكمبيوتر';
+    modeEl.textContent = '⚔️ ضد لاعب';
   }
 });
 

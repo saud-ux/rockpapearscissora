@@ -88,7 +88,7 @@ function startRound(room) {
   const alive = getAlivePlayers(room);
   alive.forEach(p => { p.choice = null; });
 
-  const mode = (alive.length % 2 === 0) ? 'pvp' : 'vs-computer';
+  const mode = 'pvp';
   room.currentMode = mode;
 
   const roundData = {
@@ -181,85 +181,7 @@ function endRound(room) {
     }
   });
 
-  if (room.currentMode === 'pvp') {
-    endRoundPvP(room, alive, noVote, eliminated);
-  } else {
-    endRoundVsComputer(room, alive, noVote, eliminated);
-  }
-}
-
-function endRoundVsComputer(room, alive, noVote, eliminated) {
-  const choices = ['rock', 'paper', 'scissors'];
-  const computerChoice = choices[Math.floor(Math.random() * 3)];
-
-  const results = [];
-  const survivors = [];
-
-  alive.forEach(p => {
-    if (!p.choice) return;
-
-    const outcome = determineOutcome(p.choice, computerChoice);
-    results.push({ name: p.name, type: p.type, choice: p.choice, outcome });
-
-    if (outcome === 'lose') {
-      p.alive = false;
-      eliminated.push({ name: p.name, type: p.type, choice: p.choice });
-      if (p.socketId) {
-        io.to(p.socketId).emit('your-result', {
-          mode: 'vs-computer',
-          yourChoice: p.choice,
-          computerChoice,
-          outcome: 'lose'
-        });
-        io.to(p.socketId).emit('you-eliminated', {
-          roundsSurvived: room.roundNumber
-        });
-      }
-    } else {
-      survivors.push({ name: p.name, type: p.type, choice: p.choice, outcome });
-      if (p.socketId) {
-        io.to(p.socketId).emit('your-result', {
-          mode: 'vs-computer',
-          yourChoice: p.choice,
-          computerChoice,
-          outcome
-        });
-      }
-    }
-  });
-
-  const choiceStats = {
-    rock: results.filter(r => r.choice === 'rock').length,
-    paper: results.filter(r => r.choice === 'paper').length,
-    scissors: results.filter(r => r.choice === 'scissors').length
-  };
-
-  const roundResult = {
-    mode: 'vs-computer',
-    roundNumber: room.roundNumber,
-    computerChoice,
-    results,
-    eliminated,
-    survivors,
-    noVote,
-    choiceStats,
-    aliveCount: getAlivePlayerCount(room)
-  };
-
-  io.to(room.hostSocketId).emit('round-result', roundResult);
-  room.overlays.forEach(sid => io.to(sid).emit('round-result', roundResult));
-  getAlivePlayers(room).forEach(p => {
-    if (p.socketId) {
-      io.to(p.socketId).emit('round-result-summary', {
-        mode: 'vs-computer',
-        aliveCount: getAlivePlayerCount(room),
-        totalPlayers: room.players.size,
-        roundNumber: room.roundNumber
-      });
-    }
-  });
-
-  checkGameEnd(room);
+  endRoundPvP(room, alive, noVote, eliminated);
 }
 
 function endRoundPvP(room, alive, noVote, eliminated) {

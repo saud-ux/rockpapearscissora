@@ -415,7 +415,7 @@
       document.getElementById('ov-timer-circle').classList.remove('urgent');
       const modeEl = document.getElementById('ov-mode-badge');
       if (modeEl) {
-        modeEl.textContent = data.mode === 'pvp' ? '⚔️ لاعب ضد لاعب' : '🖥️ ضد الكمبيوتر';
+        modeEl.textContent = '⚔️ لاعب ضد لاعب';
       }
     });
 
@@ -444,48 +444,40 @@
       const pairsContainer = document.getElementById('ov-pairs-container');
       const modeLabel = document.getElementById('ov-result-mode');
 
-      if (data.mode === 'pvp') {
-        computerLine.style.display = 'none';
-        computerChoice.style.display = 'none';
-        modeLabel.textContent = '⚔️ لاعب ضد لاعب';
+      computerLine.style.display = 'none';
+      computerChoice.style.display = 'none';
+      modeLabel.textContent = '⚔️ لاعب ضد لاعب';
 
-        let pairsHtml = '';
-        if (data.pairs && data.pairs.length > 0) {
-          data.pairs.forEach(pair => {
-            const p1c = choiceEmoji[pair.player1.choice] || '❓';
-            const p2c = choiceEmoji[pair.player2.choice] || '❓';
-            let color;
-            if (pair.outcome === 'draw') color = '#f39c12';
-            else color = '#4ecca3';
-            let resultText;
-            if (pair.outcome === 'player1') resultText = `فاز ${escapeHtml(pair.player1.name)}`;
-            else if (pair.outcome === 'player2') resultText = `فاز ${escapeHtml(pair.player2.name)}`;
-            else resultText = 'تعادل';
-            pairsHtml += `<div style="font-size:1.3rem;margin:8px 0;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.2);">
-              ${escapeHtml(pair.player1.name)} ${p1c} ⚔️ ${p2c} ${escapeHtml(pair.player2.name)}
-              <span style="color:${color};margin-right:12px;">${resultText}</span>
-            </div>`;
-          });
-        }
-        if (data.soloPlayer) {
-          const sc = choiceEmoji[data.soloPlayer.choice] || '❓';
-          const cc = choiceEmoji[data.soloPlayer.computerChoice] || '❓';
-          const o = data.soloPlayer.outcome;
-          const color = o === 'win' ? '#4ecca3' : o === 'lose' ? '#e74c3c' : '#f39c12';
-          const txt = o === 'win' ? 'فاز' : o === 'lose' ? 'خسر' : 'تعادل';
+      let pairsHtml = '';
+      if (data.pairs && data.pairs.length > 0) {
+        data.pairs.forEach(pair => {
+          const p1c = choiceEmoji[pair.player1.choice] || '❓';
+          const p2c = choiceEmoji[pair.player2.choice] || '❓';
+          let color;
+          if (pair.outcome === 'draw') color = '#f39c12';
+          else color = '#4ecca3';
+          let resultText;
+          if (pair.outcome === 'player1') resultText = `فاز ${escapeHtml(pair.player1.name)}`;
+          else if (pair.outcome === 'player2') resultText = `فاز ${escapeHtml(pair.player2.name)}`;
+          else resultText = 'تعادل';
           pairsHtml += `<div style="font-size:1.3rem;margin:8px 0;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.2);">
-            🖥️ ${escapeHtml(data.soloPlayer.name)} ${sc} ضد ${cc} الكمبيوتر
-            <span style="color:${color};margin-right:12px;">${txt}</span>
+            ${escapeHtml(pair.player1.name)} ${p1c} ⚔️ ${p2c} ${escapeHtml(pair.player2.name)}
+            <span style="color:${color};margin-right:12px;">${resultText}</span>
           </div>`;
-        }
-        pairsContainer.innerHTML = pairsHtml;
-      } else {
-        computerLine.style.display = '';
-        computerChoice.style.display = '';
-        computerChoice.textContent = choiceEmoji[data.computerChoice] + ' ' + choiceName[data.computerChoice];
-        modeLabel.textContent = '🖥️ ضد الكمبيوتر';
-        pairsContainer.innerHTML = '';
+        });
       }
+      if (data.soloPlayer) {
+        const sc = choiceEmoji[data.soloPlayer.choice] || '❓';
+        const cc = choiceEmoji[data.soloPlayer.computerChoice] || '❓';
+        const o = data.soloPlayer.outcome;
+        const color = o === 'win' ? '#4ecca3' : o === 'lose' ? '#e74c3c' : '#f39c12';
+        const txt = o === 'win' ? 'فاز' : o === 'lose' ? 'خسر' : 'تعادل';
+        pairsHtml += `<div style="font-size:1.3rem;margin:8px 0;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.2);">
+          🖥️ ${escapeHtml(data.soloPlayer.name)} ${sc} ضد ${cc} الكمبيوتر
+          <span style="color:${color};margin-right:12px;">${txt}</span>
+        </div>`;
+      }
+      pairsContainer.innerHTML = pairsHtml;
 
       const stats = data.choiceStats || {};
       const statsBar = document.getElementById('ov-stats-bar');
