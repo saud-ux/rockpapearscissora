@@ -258,6 +258,25 @@ label {
   font-size: 1.1rem;
 }
 
+.round-mode {
+  font-size: 0.95rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.round-mode.mode-pvp {
+  background: rgba(243, 156, 18, 0.15);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+}
+
+.round-mode.mode-cpu {
+  background: rgba(52, 152, 219, 0.15);
+  color: var(--blue);
+  border: 1px solid var(--blue);
+}
+
 .vote-progress {
   text-align: center;
   color: var(--text-secondary);

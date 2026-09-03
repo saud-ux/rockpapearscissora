@@ -78,6 +78,10 @@ socket.on('round-started', (data) => {
   document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.remove('selected'));
   document.getElementById('timer-player').textContent = '--';
   document.getElementById('timer-player').classList.remove('urgent');
+  const modeEl = document.getElementById('round-mode-player');
+  if (modeEl) {
+    modeEl.textContent = data.mode === 'pvp' ? '⚔️ ضد لاعب' : '🖥️ ضد الكمبيوتر';
+  }
 });
 
 socket.on('timer-tick', (data) => {
@@ -115,7 +119,17 @@ socket.on('your-result', (data) => {
 
   showScreen('result');
 
-  document.getElementById('pc-choice-player').textContent = choiceEmoji[data.computerChoice];
+  const opponentLabel = document.getElementById('opponent-label-player');
+  const opponentChoice = document.getElementById('pc-choice-player');
+
+  if (data.mode === 'pvp') {
+    opponentLabel.textContent = data.opponentName + ':';
+    opponentChoice.textContent = data.opponentChoice ? choiceEmoji[data.opponentChoice] : '❓';
+  } else {
+    opponentLabel.textContent = 'الكمبيوتر:';
+    opponentChoice.textContent = data.computerChoice ? choiceEmoji[data.computerChoice] : '❓';
+  }
+
   document.getElementById('my-choice-player').textContent = data.yourChoice ? choiceEmoji[data.yourChoice] : '❓';
 
   const emojiEl = document.getElementById('result-emoji-player');

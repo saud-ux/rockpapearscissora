@@ -63,14 +63,22 @@ function broadcastPlayerList(room) {
   room.overlays.forEach(sid => io.to(sid).emit('player-list', data));
 }
 
-function determineOutcome(playerChoice, computerChoice) {
-  if (playerChoice === computerChoice) return 'draw';
+function determineOutcome(choice1, choice2) {
+  if (choice1 === choice2) return 'draw';
   if (
-    (playerChoice === 'rock' && computerChoice === 'scissors') ||
-    (playerChoice === 'scissors' && computerChoice === 'paper') ||
-    (playerChoice === 'paper' && computerChoice === 'rock')
+    (choice1 === 'rock' && choice2 === 'scissors') ||
+    (choice1 === 'scissors' && choice2 === 'paper') ||
+    (choice1 === 'paper' && choice2 === 'rock')
   ) return 'win';
   return 'lose';
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 function startRound(room) {
@@ -80,10 +88,14 @@ function startRound(room) {
   const alive = getAlivePlayers(room);
   alive.forEach(p => { p.choice = null; });
 
+  const mode = (alive.length % 2 === 0) ? 'pvp' : 'vs-computer';
+  room.currentMode = mode;
+
   const roundData = {
     roundNumber: room.roundNumber,
     duration: room.roundDuration,
-    alivePlayers: alive.map(p => ({ name: p.name, type: p.type }))
+    alivePlayers: alive.map(p => ({ name: p.name, type: p.type })),
+    mode
   };
 
   io.to(room.hostSocketId).emit('round-started', roundData);
@@ -147,14 +159,9 @@ function endRound(room) {
     room.roundTimer = null;
   }
 
-  const choices = ['rock', 'paper', 'scissors'];
-  const computerChoice = choices[Math.floor(Math.random() * 3)];
-
   const alive = getAlivePlayers(room);
-  const results = [];
-  const eliminated = [];
-  const survivors = [];
   const noVote = [];
+  const eliminated = [];
 
   alive.forEach(p => {
     if (!p.choice) {
@@ -163,30 +170,43 @@ function endRound(room) {
       eliminated.push({ name: p.name, type: p.type, reason: 'no-vote' });
       if (p.socketId) {
         io.to(p.socketId).emit('your-result', {
+          mode: room.currentMode,
           yourChoice: null,
-          computerChoice,
           outcome: 'eliminated'
         });
         io.to(p.socketId).emit('you-eliminated', {
           roundsSurvived: room.roundNumber
         });
       }
-      return;
     }
+  });
+
+  if (room.currentMode === 'pvp') {
+    endRoundPvP(room, alive, noVote, eliminated);
+  } else {
+    endRoundVsComputer(room, alive, noVote, eliminated);
+  }
+}
+
+function endRoundVsComputer(room, alive, noVote, eliminated) {
+  const choices = ['rock', 'paper', 'scissors'];
+  const computerChoice = choices[Math.floor(Math.random() * 3)];
+
+  const results = [];
+  const survivors = [];
+
+  alive.forEach(p => {
+    if (!p.choice) return;
 
     const outcome = determineOutcome(p.choice, computerChoice);
-    results.push({
-      name: p.name,
-      type: p.type,
-      choice: p.choice,
-      outcome
-    });
+    results.push({ name: p.name, type: p.type, choice: p.choice, outcome });
 
     if (outcome === 'lose') {
       p.alive = false;
       eliminated.push({ name: p.name, type: p.type, choice: p.choice });
       if (p.socketId) {
         io.to(p.socketId).emit('your-result', {
+          mode: 'vs-computer',
           yourChoice: p.choice,
           computerChoice,
           outcome: 'lose'
@@ -199,6 +219,7 @@ function endRound(room) {
       survivors.push({ name: p.name, type: p.type, choice: p.choice, outcome });
       if (p.socketId) {
         io.to(p.socketId).emit('your-result', {
+          mode: 'vs-computer',
           yourChoice: p.choice,
           computerChoice,
           outcome
@@ -214,6 +235,7 @@ function endRound(room) {
   };
 
   const roundResult = {
+    mode: 'vs-computer',
     roundNumber: room.roundNumber,
     computerChoice,
     results,
@@ -226,10 +248,141 @@ function endRound(room) {
 
   io.to(room.hostSocketId).emit('round-result', roundResult);
   room.overlays.forEach(sid => io.to(sid).emit('round-result', roundResult));
-  alive.forEach(p => {
-    if (p.socketId && p.alive) {
+  getAlivePlayers(room).forEach(p => {
+    if (p.socketId) {
       io.to(p.socketId).emit('round-result-summary', {
-        computerChoice,
+        mode: 'vs-computer',
+        aliveCount: getAlivePlayerCount(room),
+        totalPlayers: room.players.size,
+        roundNumber: room.roundNumber
+      });
+    }
+  });
+
+  checkGameEnd(room);
+}
+
+function endRoundPvP(room, alive, noVote, eliminated) {
+  const voters = alive.filter(p => p.choice);
+  shuffleArray(voters);
+
+  const pairs = [];
+  const survivors = [];
+  let soloPlayer = null;
+
+  for (let i = 0; i < voters.length; i += 2) {
+    if (i + 1 < voters.length) {
+      const p1 = voters[i];
+      const p2 = voters[i + 1];
+      const outcome = determineOutcome(p1.choice, p2.choice);
+
+      let pairResult;
+      if (outcome === 'win') {
+        pairResult = 'player1';
+        p2.alive = false;
+        eliminated.push({ name: p2.name, type: p2.type, choice: p2.choice });
+        survivors.push({ name: p1.name, type: p1.type, choice: p1.choice, outcome: 'win' });
+      } else if (outcome === 'lose') {
+        pairResult = 'player2';
+        p1.alive = false;
+        eliminated.push({ name: p1.name, type: p1.type, choice: p1.choice });
+        survivors.push({ name: p2.name, type: p2.type, choice: p2.choice, outcome: 'win' });
+      } else {
+        pairResult = 'draw';
+        survivors.push({ name: p1.name, type: p1.type, choice: p1.choice, outcome: 'draw' });
+        survivors.push({ name: p2.name, type: p2.type, choice: p2.choice, outcome: 'draw' });
+      }
+
+      pairs.push({
+        player1: { name: p1.name, type: p1.type, choice: p1.choice },
+        player2: { name: p2.name, type: p2.type, choice: p2.choice },
+        outcome: pairResult
+      });
+
+      const p1Outcome = pairResult === 'player1' ? 'win' : pairResult === 'player2' ? 'lose' : 'draw';
+      const p2Outcome = pairResult === 'player2' ? 'win' : pairResult === 'player1' ? 'lose' : 'draw';
+
+      if (p1.socketId) {
+        io.to(p1.socketId).emit('your-result', {
+          mode: 'pvp',
+          yourChoice: p1.choice,
+          opponentName: p2.name,
+          opponentChoice: p2.choice,
+          outcome: p1Outcome
+        });
+        if (p1Outcome === 'lose') {
+          io.to(p1.socketId).emit('you-eliminated', { roundsSurvived: room.roundNumber });
+        }
+      }
+      if (p2.socketId) {
+        io.to(p2.socketId).emit('your-result', {
+          mode: 'pvp',
+          yourChoice: p2.choice,
+          opponentName: p1.name,
+          opponentChoice: p1.choice,
+          outcome: p2Outcome
+        });
+        if (p2Outcome === 'lose') {
+          io.to(p2.socketId).emit('you-eliminated', { roundsSurvived: room.roundNumber });
+        }
+      }
+    } else {
+      const p = voters[i];
+      const choices = ['rock', 'paper', 'scissors'];
+      const computerChoice = choices[Math.floor(Math.random() * 3)];
+      const outcome = determineOutcome(p.choice, computerChoice);
+
+      soloPlayer = {
+        name: p.name, type: p.type, choice: p.choice,
+        computerChoice, outcome
+      };
+
+      if (outcome === 'lose') {
+        p.alive = false;
+        eliminated.push({ name: p.name, type: p.type, choice: p.choice });
+      } else {
+        survivors.push({ name: p.name, type: p.type, choice: p.choice, outcome });
+      }
+
+      if (p.socketId) {
+        io.to(p.socketId).emit('your-result', {
+          mode: 'vs-computer',
+          yourChoice: p.choice,
+          computerChoice,
+          outcome
+        });
+        if (outcome === 'lose') {
+          io.to(p.socketId).emit('you-eliminated', { roundsSurvived: room.roundNumber });
+        }
+      }
+    }
+  }
+
+  const allVoterResults = voters.map(v => ({ name: v.name, type: v.type, choice: v.choice }));
+  const choiceStats = {
+    rock: allVoterResults.filter(r => r.choice === 'rock').length,
+    paper: allVoterResults.filter(r => r.choice === 'paper').length,
+    scissors: allVoterResults.filter(r => r.choice === 'scissors').length
+  };
+
+  const roundResult = {
+    mode: 'pvp',
+    roundNumber: room.roundNumber,
+    pairs,
+    soloPlayer,
+    eliminated,
+    survivors,
+    noVote,
+    choiceStats,
+    aliveCount: getAlivePlayerCount(room)
+  };
+
+  io.to(room.hostSocketId).emit('round-result', roundResult);
+  room.overlays.forEach(sid => io.to(sid).emit('round-result', roundResult));
+  getAlivePlayers(room).forEach(p => {
+    if (p.socketId) {
+      io.to(p.socketId).emit('round-result-summary', {
+        mode: 'pvp',
         aliveCount: getAlivePlayerCount(room),
         totalPlayers: room.players.size,
         roundNumber: room.roundNumber
