@@ -23,6 +23,22 @@ socket.emit('create-room');
 socket.on('room-created', (data) => {
   roomCode = data.roomCode;
   document.getElementById('room-code').textContent = roomCode;
+  const overlayUrl = `${window.location.origin}/overlay.html?room=${roomCode}`;
+  document.getElementById('overlay-url').textContent = overlayUrl;
+});
+
+document.getElementById('btn-copy-overlay').addEventListener('click', () => {
+  const overlayUrl = `${window.location.origin}/overlay.html?room=${roomCode}`;
+  navigator.clipboard.writeText(overlayUrl).then(() => {
+    const btn = document.getElementById('btn-copy-overlay');
+    btn.textContent = 'تم النسخ!';
+    setTimeout(() => { btn.textContent = 'نسخ'; }, 2000);
+  });
+});
+
+document.getElementById('btn-open-overlay').addEventListener('click', () => {
+  const overlayUrl = `${window.location.origin}/overlay.html?room=${roomCode}`;
+  window.open(overlayUrl, '_blank');
 });
 
 document.getElementById('btn-copy-link').addEventListener('click', () => {

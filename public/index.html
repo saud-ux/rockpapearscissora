@@ -15,8 +15,25 @@
       <div class="card" style="text-align:center;">
         <label>كود الغرفة</label>
         <div class="room-code-display" id="room-code">----</div>
-        <div style="margin-top:12px;">
-          <button class="btn btn-secondary" id="btn-copy-link">نسخ الرابط</button>
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+          <button class="btn btn-secondary" id="btn-copy-link">نسخ رابط اللعب</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">روابط البث (OBS)</div>
+        <div style="margin-bottom:12px;color:var(--text-secondary);font-size:0.9rem;">
+          انسخ رابط الأوفرلاي وأضفه كـ Browser Source في OBS
+        </div>
+        <div class="link-row" id="overlay-link-row">
+          <code id="overlay-url" class="overlay-url">---</code>
+          <button class="btn btn-secondary btn-sm" id="btn-copy-overlay">نسخ</button>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-secondary btn-sm" id="btn-open-overlay" style="font-size:0.85rem;">فتح الأوفرلاي في تبويب جديد ↗</button>
+        </div>
+        <div style="margin-top:12px;color:var(--text-secondary);font-size:0.8rem;">
+          الدقة المطلوبة: 1920×1080 — خلفية شفافة
         </div>
       </div>
 
