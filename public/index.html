@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حجر ورقة مقص — باتل رويال</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1 style="text-align:center;margin-bottom:24px;">حجر ورقة مقص — باتل رويال</h1>
+
+    <!-- Lobby Screen -->
+    <div id="screen-lobby">
+      <div class="card" style="text-align:center;">
+        <label>كود الغرفة</label>
+        <div class="room-code-display" id="room-code">----</div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-secondary" id="btn-copy-link">نسخ الرابط</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">تويتش (اختياري)</div>
+        <div class="input-group">
+          <input type="text" id="twitch-channel" placeholder="اسم القناة">
+          <button class="btn btn-twitch" id="btn-twitch-connect">اتصال</button>
+        </div>
+        <div id="twitch-status" style="margin-top:8px;font-size:0.9rem;color:var(--text-secondary);">
+          غير متصل
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">اللاعبين (<span id="player-count-lobby">0</span>)</div>
+        <div class="player-list" id="player-list-lobby"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">إعدادات</div>
+        <label>وقت الجولة</label>
+        <select id="round-duration">
+          <option value="10">10 ثانية</option>
+          <option value="15" selected>15 ثانية</option>
+          <option value="20">20 ثانية</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-large" id="btn-start" disabled>
+        ابدأ اللعبة
+      </button>
+      <p id="start-hint" style="text-align:center;color:var(--text-secondary);margin-top:8px;">
+        يحتاج 2 لاعبين على الأقل
+      </p>
+    </div>
+
+    <!-- Playing Screen -->
+    <div id="screen-playing" class="hidden">
+      <div class="card">
+        <div class="round-info">
+          <span>الجولة <strong id="round-number-play">1</strong></span>
+          <span>الأحياء: <strong id="alive-count-play">0</strong></span>
+        </div>
+        <div class="timer-display" id="timer-play">--</div>
+        <div style="text-align:center;margin-top:8px;font-size:1.1rem;">
+          صوّتوا: ✊ حجر &nbsp; ✋ ورقة &nbsp; ✌️ مقص
+        </div>
+        <div class="vote-progress">
+          المصوتين: <span id="voted-count">0</span>/<span id="total-count">0</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">اللاعبين</div>
+        <div class="player-list" id="player-list-playing"></div>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="screen-results" class="hidden">
+      <div class="card fade-in">
+        <h2 style="text-align:center;margin-bottom:16px;">
+          نتيجة الجولة <span id="round-number-result">1</span>
+        </h2>
+        <div style="text-align:center;font-size:1.5rem;margin-bottom:16px;">
+          الكمبيوتر اختار: <span id="computer-choice-display" class="pop-in"></span>
+        </div>
+        <div id="results-container"></div>
+        <div style="text-align:center;margin-top:16px;font-size:1.1rem;">
+          المتبقين: <strong id="alive-after-round">0</strong> لاعبين
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px;">
+        <button class="btn btn-primary btn-block btn-large" id="btn-next-round">
+          الجولة التالية
+        </button>
+        <button class="btn btn-secondary btn-block" id="btn-reset-from-results">
+          إعادة اللعبة
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="screen-gameover" class="hidden">
+      <div class="card">
+        <div class="winner-display fade-in">
+          <div class="trophy">🏆</div>
+          <div class="winner-name" id="winner-name">---</div>
+          <div class="winner-rounds" id="winner-rounds">---</div>
+        </div>
+      </div>
+      <button class="btn btn-gold btn-block btn-large" id="btn-new-game" style="margin-top:16px;">
+        لعبة جديدة
+      </button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

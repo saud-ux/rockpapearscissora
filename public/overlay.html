@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حجر ورقة مقص — أوفرلاي</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: transparent;
+      --surface: rgba(22, 33, 62, 0.85);
+      --border: rgba(15, 52, 96, 0.8);
+      --green: #4ecca3;
+      --red: #e74c3c;
+      --gold: #f39c12;
+      --blue: #3498db;
+      --twitch: #9146ff;
+      --text: #eee;
+      --text-secondary: #aaa;
+    }
+
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: transparent;
+      color: var(--text);
+      direction: rtl;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+    }
+
+    .overlay-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding: 40px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .top-bar {
+      position: absolute;
+      top: 30px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .top-bar .panel {
+      padding: 16px 28px;
+    }
+
+    .room-info {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .room-info .code {
+      color: var(--gold);
+      font-size: 2rem;
+      letter-spacing: 0.2em;
+      margin-right: 12px;
+    }
+
+    .round-badge {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .alive-badge {
+      font-size: 1.2rem;
+      color: var(--green);
+    }
+
+    .center-area {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .timer-circle {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 8px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 5rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.3s;
+    }
+
+    .timer-circle.urgent {
+      border-color: var(--red);
+      color: var(--red);
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    .vote-info {
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      margin-top: 12px;
+    }
+
+    .choice-hint {
+      font-size: 2rem;
+      margin-top: 16px;
+    }
+
+    .player-sidebar {
+      position: absolute;
+      top: 120px;
+      right: 40px;
+      width: 320px;
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    .player-sidebar h3 {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .overlay-player {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      background: rgba(0,0,0,0.2);
+      transition: all 0.3s;
+    }
+
+    .overlay-player.eliminated {
+      opacity: 0.3;
+      text-decoration: line-through;
+    }
+
+    .overlay-player .icon {
+      font-size: 1.2rem;
+    }
+
+    .result-overlay {
+      text-align: center;
+    }
+
+    .computer-choice-big {
+      font-size: 6rem;
+      margin: 20px 0;
+      animation: popIn 0.5s ease-out;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.3); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin: 24px 0;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-item .stat-emoji {
+      font-size: 2rem;
+    }
+
+    .stat-item .stat-count {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .stat-item .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .eliminated-list {
+      margin-top: 20px;
+      color: var(--red);
+      font-size: 1.2rem;
+    }
+
+    .winner-overlay {
+      text-align: center;
+    }
+
+    .winner-overlay .big-trophy {
+      font-size: 8rem;
+      margin-bottom: 20px;
+    }
+
+    .winner-overlay .big-name {
+      font-size: 4rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-shadow: 0 0 30px rgba(243, 156, 18, 0.5);
+      margin-bottom: 12px;
+    }
+
+    .winner-overlay .rounds-text {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    .lobby-center {
+      text-align: center;
+    }
+
+    .lobby-center .big-code {
+      font-size: 5rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.3em;
+      margin: 16px 0;
+    }
+
+    .lobby-center .join-url {
+      font-size: 1.3rem;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    .lobby-center .player-count-big {
+      font-size: 2rem;
+      margin-top: 20px;
+    }
+
+    .lobby-center .waiting-text {
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-container">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="panel room-info">
+        كود الغرفة: <span class="code" id="ov-room-code">----</span>
+      </div>
+      <div class="panel" id="ov-round-info" class="hidden">
+        <span class="round-badge">الجولة <span id="ov-round-number">1</span></span>
+        &nbsp;&nbsp;
+        <span class="alive-badge">الأحياء: <span id="ov-alive-count">0</span></span>
+      </div>
+    </div>
+
+    <!-- Center Area -->
+    <div class="center-area" id="ov-center">
+
+      <!-- Lobby -->
+      <div id="ov-lobby" class="lobby-center">
+        <div class="panel" style="padding:40px 60px;">
+          <h1 style="font-size:2.5rem;margin-bottom:8px;">حجر ورقة مقص</h1>
+          <h2 style="font-size:1.5rem;color:var(--gold);">باتل رويال</h2>
+          <div class="big-code" id="ov-lobby-code">----</div>
+          <div class="player-count-big">
+            اللاعبين: <span id="ov-lobby-players">0</span>
+          </div>
+          <div class="waiting-text">بانتظار بدء اللعبة...</div>
+        </div>
+      </div>
+
+      <!-- Playing -->
+      <div id="ov-playing" class="hidden">
+        <div class="timer-circle" id="ov-timer-circle">--</div>
+        <div class="choice-hint">اختر: ✊ حجر &nbsp; ✋ ورقة &nbsp; ✌️ مقص</div>
+        <div class="vote-info">
+          المصوتين: <span id="ov-voted">0</span> / <span id="ov-total">0</span>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="ov-results" class="hidden result-overlay">
+        <div class="panel" style="padding:32px 48px;min-width:500px;">
+          <h2 style="margin-bottom:12px;">نتيجة الجولة <span id="ov-result-round">1</span></h2>
+          <div style="font-size:1.3rem;">الكمبيوتر اختار:</div>
+          <div class="computer-choice-big" id="ov-computer-choice"></div>
+          <div class="stats-bar" id="ov-stats-bar"></div>
+          <div class="eliminated-list" id="ov-eliminated-list"></div>
+          <div style="margin-top:16px;font-size:1.3rem;">
+            المتبقين: <strong id="ov-remaining">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Winner -->
+      <div id="ov-winner" class="hidden winner-overlay">
+        <div class="panel" style="padding:48px 64px;">
+          <div class="big-trophy">🏆</div>
+          <div style="font-size:1.5rem;margin-bottom:8px;">الفائز</div>
+          <div class="big-name" id="ov-winner-name">---</div>
+          <div class="rounds-text" id="ov-winner-rounds">---</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player Sidebar -->
+    <div class="player-sidebar panel" id="ov-player-sidebar">
+      <h3>اللاعبين (<span id="ov-sidebar-count">0</span>)</h3>
+      <div id="ov-sidebar-list"></div>
+    </div>
+  </div>
+
+  <canvas id="confetti-canvas" class="hidden"></canvas>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const choiceEmoji = { rock: '✊', paper: '✋', scissors: '✌️' };
+    const choiceName = { rock: 'حجر', paper: 'ورقة', scissors: 'مقص' };
+
+    let players = [];
+
+    const params = new URLSearchParams(window.location.search);
+    const roomCode = params.get('room') || '';
+    socket.emit('join-overlay', { roomCode });
+
+    socket.on('overlay-joined', (data) => {
+      document.getElementById('ov-room-code').textContent = data.roomCode;
+      document.getElementById('ov-lobby-code').textContent = data.roomCode;
+    });
+
+    function showOvScreen(name) {
+      ['ov-lobby', 'ov-playing', 'ov-results', 'ov-winner'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById('ov-' + name).classList.remove('hidden');
+    }
+
+    socket.on('player-list', (data) => {
+      players = data.players;
+      document.getElementById('ov-lobby-players').textContent = data.playerCount;
+      document.getElementById('ov-sidebar-count').textContent = data.playerCount;
+      renderSidebar();
+    });
+
+    function renderSidebar() {
+      const container = document.getElementById('ov-sidebar-list');
+      container.innerHTML = players.map(p => {
+        const icon = p.type === 'twitch' ? '🟣' : '🌐';
+        const cls = p.alive ? '' : 'eliminated';
+        return `<div class="overlay-player ${cls}"><span class="icon">${icon}</span> ${escapeHtml(p.name)}</div>`;
+      }).join('');
+    }
+
+    socket.on('round-started', (data) => {
+      showOvScreen('playing');
+      document.getElementById('ov-round-number').textContent = data.roundNumber;
+      document.getElementById('ov-alive-count').textContent = data.alivePlayers.length;
+      document.getElementById('ov-voted').textContent = '0';
+      document.getElementById('ov-total').textContent = data.alivePlayers.length;
+      document.getElementById('ov-timer-circle').textContent = '--';
+      document.getElementById('ov-timer-circle').classList.remove('urgent');
+    });
+
+    socket.on('timer-tick', (data) => {
+      const el = document.getElementById('ov-timer-circle');
+      el.textContent = data.remaining;
+      if (data.remaining <= 3) {
+        el.classList.add('urgent');
+      } else {
+        el.classList.remove('urgent');
+      }
+    });
+
+    socket.on('vote-count-updated', (data) => {
+      document.getElementById('ov-voted').textContent = data.voted;
+      document.getElementById('ov-total').textContent = data.total;
+    });
+
+    socket.on('round-result', (data) => {
+      showOvScreen('results');
+      document.getElementById('ov-result-round').textContent = data.roundNumber;
+      document.getElementById('ov-computer-choice').textContent =
+        choiceEmoji[data.computerChoice] + ' ' + choiceName[data.computerChoice];
+      document.getElementById('ov-remaining').textContent = data.aliveCount;
+
+      const stats = data.choiceStats || {};
+      const statsBar = document.getElementById('ov-stats-bar');
+      statsBar.innerHTML = ['rock', 'paper', 'scissors'].map(c => `
+        <div class="stat-item">
+          <div class="stat-emoji">${choiceEmoji[c]}</div>
+          <div class="stat-count">${stats[c] || 0}</div>
+          <div class="stat-label">${choiceName[c]}</div>
+        </div>
+      `).join('');
+
+      const elimList = document.getElementById('ov-eliminated-list');
+      const allElim = data.eliminated || [];
+      if (allElim.length > 0) {
+        elimList.innerHTML = '❌ المُستبعدين: ' + allElim.map(e => escapeHtml(e.name)).join('، ');
+      } else {
+        elimList.innerHTML = '';
+      }
+
+      renderSidebar();
+    });
+
+    socket.on('game-over', (data) => {
+      showOvScreen('winner');
+      if (data.winner) {
+        document.getElementById('ov-winner-name').textContent = data.winner.name;
+        document.getElementById('ov-winner-rounds').textContent = `نجا ${data.roundsSurvived} جولات!`;
+      } else {
+        document.getElementById('ov-winner-name').textContent = 'تعادل!';
+        document.getElementById('ov-winner-rounds').textContent = 'الكل خسر بنفس الجولة';
+      }
+      launchConfetti();
+    });
+
+    socket.on('game-reset', () => {
+      showOvScreen('lobby');
+    });
+
+    socket.on('room-closed', () => {
+      document.body.innerHTML = '';
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function launchConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      canvas.classList.remove('hidden');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1920;
+      canvas.height = 1080;
+
+      const particles = [];
+      const colors = ['#f39c12', '#4ecca3', '#e74c3c', '#3498db', '#9146ff', '#fff'];
+      for (let i = 0; i < 200; i++) {
+        particles.push({
+          x: Math.random() * 1920,
+          y: Math.random() * 1080 - 1080,
+          w: Math.random() * 12 + 5,
+          h: Math.random() * 8 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 5,
+          vy: Math.random() * 4 + 2,
+          rot: Math.random() * 360,
+          rv: (Math.random() - 0.5) * 12
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, 1920, 1080);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.rv;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frame++;
+        if (frame < 240) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.classList.add('hidden');
+        }
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>

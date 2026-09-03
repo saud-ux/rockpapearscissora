@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>حجر ورقة مقص — العب</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .join-form {
+      text-align: center;
+    }
+
+    .join-form h1 {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    .join-form h2 {
+      font-size: 1.2rem;
+      color: var(--gold);
+      margin-bottom: 32px;
+    }
+
+    .join-form .field {
+      margin-bottom: 16px;
+      text-align: right;
+    }
+
+    .code-input {
+      font-size: 2rem !important;
+      text-align: center;
+      letter-spacing: 0.5em;
+      direction: ltr;
+    }
+
+    .waiting-screen {
+      text-align: center;
+    }
+
+    .waiting-screen .check {
+      font-size: 3rem;
+      color: var(--green);
+    }
+
+    .choice-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .choice-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 24px 16px;
+      border: 3px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 100px;
+    }
+
+    .choice-btn:active {
+      transform: scale(0.95);
+    }
+
+    .choice-btn .emoji {
+      font-size: 3rem;
+    }
+
+    .choice-btn.selected {
+      border-color: var(--green);
+      background: rgba(78, 204, 163, 0.15);
+      box-shadow: 0 0 20px rgba(78, 204, 163, 0.2);
+    }
+
+    .choice-btn:last-child {
+      grid-column: 1 / -1;
+      max-width: 60%;
+      justify-self: center;
+      width: 100%;
+    }
+
+    .current-choice {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .player-result {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .player-result .result-emoji {
+      font-size: 4rem;
+      margin: 16px 0;
+    }
+
+    .player-result .result-text {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .player-result .result-text.win { color: var(--green); }
+    .player-result .result-text.lose { color: var(--red); }
+    .player-result .result-text.draw { color: var(--gold); }
+
+    .eliminated-screen {
+      text-align: center;
+    }
+
+    .eliminated-screen .skull {
+      font-size: 4rem;
+      margin-bottom: 16px;
+    }
+
+    .eliminated-screen h2 {
+      color: var(--red);
+      font-size: 2rem;
+    }
+
+    .won-screen {
+      text-align: center;
+    }
+
+    .won-screen .trophy {
+      font-size: 5rem;
+      margin-bottom: 16px;
+    }
+
+    .won-screen h2 {
+      color: var(--gold);
+      font-size: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container">
+
+    <!-- Join Screen -->
+    <div id="screen-join" class="join-form">
+      <h1>حجر ورقة مقص</h1>
+      <h2>باتل رويال</h2>
+
+      <div class="field">
+        <label>كود الغرفة</label>
+        <input type="text" id="room-code-input" class="code-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="0000">
+      </div>
+
+      <div class="field">
+        <label>اسمك</label>
+        <input type="text" id="player-name-input" maxlength="20" placeholder="ادخل اسمك">
+      </div>
+
+      <button class="btn btn-primary btn-block btn-large" id="btn-join" style="margin-top:16px;">
+        انضم
+      </button>
+
+      <p id="join-error" style="color:var(--red);margin-top:12px;display:none;"></p>
+    </div>
+
+    <!-- Waiting Screen -->
+    <div id="screen-waiting" class="hidden waiting-screen">
+      <div class="check">✅</div>
+      <h2 style="margin:12px 0;">انضممت!</h2>
+      <p style="color:var(--text-secondary);">الغرفة: <span id="room-code-waiting"></span></p>
+      <p style="margin-top:20px;font-size:1.1rem;">بانتظار بدء اللعبة...</p>
+      <p style="margin-top:12px;color:var(--text-secondary);">
+        اللاعبين: <span id="player-count-waiting">0</span>
+      </p>
+      <button class="btn btn-danger" id="btn-leave" style="margin-top:24px;">انسحب</button>
+    </div>
+
+    <!-- Play Screen -->
+    <div id="screen-play" class="hidden">
+      <div class="card">
+        <div class="round-info">
+          <span>الجولة <strong id="round-number-player">1</strong></span>
+          <span class="timer-display" id="timer-player" style="font-size:2rem;">--</span>
+        </div>
+        <h2 style="text-align:center;margin:16px 0;">اختر!</h2>
+        <div class="choice-buttons">
+          <button class="choice-btn" data-choice="rock">
+            <span class="emoji">✊</span>
+            <span>حجر</span>
+          </button>
+          <button class="choice-btn" data-choice="paper">
+            <span class="emoji">✋</span>
+            <span>ورقة</span>
+          </button>
+          <button class="choice-btn" data-choice="scissors">
+            <span class="emoji">✌️</span>
+            <span>مقص</span>
+          </button>
+        </div>
+        <div class="current-choice" id="current-choice-display"></div>
+      </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="screen-result" class="hidden">
+      <div class="card player-result fade-in">
+        <div>
+          الكمبيوتر: <span id="pc-choice-player" style="font-size:1.5rem;"></span>
+        </div>
+        <div style="margin-top:8px;">
+          أنت: <span id="my-choice-player" style="font-size:1.5rem;"></span>
+        </div>
+        <div class="result-emoji" id="result-emoji-player"></div>
+        <div class="result-text" id="result-text-player"></div>
+        <p style="color:var(--text-secondary);margin-top:12px;">
+          المتبقين: <span id="alive-count-player">0</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Eliminated Screen -->
+    <div id="screen-eliminated" class="hidden eliminated-screen">
+      <div class="card fade-in">
+        <div class="skull">💀</div>
+        <h2>طلعت!</h2>
+        <p style="margin-top:12px;color:var(--text-secondary);">
+          نجوت <span id="rounds-survived">0</span> جولات
+        </p>
+        <p style="margin-top:20px;">تقدر تتفرج على باقي اللعبة</p>
+      </div>
+    </div>
+
+    <!-- Won Screen -->
+    <div id="screen-won" class="hidden won-screen">
+      <div class="card fade-in">
+        <div class="trophy">🏆</div>
+        <h2>فزت!</h2>
+        <p style="margin-top:12px;color:var(--text-secondary);">
+          نجوت <span id="rounds-won">0</span> جولات!
+        </p>
+      </div>
+    </div>
+
+    <!-- Room Closed -->
+    <div id="screen-closed" class="hidden" style="text-align:center;">
+      <div class="card fade-in">
+        <h2 style="color:var(--red);">الغرفة أُغلقت</h2>
+        <button class="btn btn-primary" onclick="location.reload()" style="margin-top:16px;">
+          عودة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/player.js"></script>
+</body>
+</html>
