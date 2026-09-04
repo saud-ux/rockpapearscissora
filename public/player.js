@@ -25,6 +25,14 @@ if (params.get('room')) {
   document.getElementById('room-code-input').value = params.get('room');
 }
 
+// استرجاع الاسم المحفوظ للانضمام السريع
+try {
+  const savedName = localStorage.getItem('rps-player-name');
+  if (savedName) {
+    document.getElementById('player-name-input').value = savedName;
+  }
+} catch (e) { /* المتصفح يمنع التخزين */ }
+
 document.getElementById('btn-join').addEventListener('click', () => {
   const roomCode = document.getElementById('room-code-input').value.trim();
   const playerName = document.getElementById('player-name-input').value.trim();
@@ -37,6 +45,11 @@ document.getElementById('btn-join').addEventListener('click', () => {
     showError('ادخل اسمك');
     return;
   }
+
+  // حفظ الاسم للمرة الجاية
+  try {
+    localStorage.setItem('rps-player-name', playerName);
+  } catch (e) { /* المتصفح يمنع التخزين */ }
 
   socket.emit('join-room', { roomCode, playerName });
 });

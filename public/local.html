@@ -364,6 +364,14 @@
       document.getElementById('screen-' + id).classList.remove('hidden');
     }
 
+    // استرجاع الأسماء المحفوظة للانضمام السريع
+    try {
+      const n1 = localStorage.getItem('rps-local-name1');
+      const n2 = localStorage.getItem('rps-local-name2');
+      if (n1) document.getElementById('name1').value = n1;
+      if (n2) document.getElementById('name2').value = n2;
+    } catch (e) { /* المتصفح يمنع التخزين */ }
+
     // Rounds select
     document.querySelectorAll('.round-opt').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -379,6 +387,11 @@
       const n2 = document.getElementById('name2').value.trim();
       state.p1 = n1 || 'اللاعب 1';
       state.p2 = n2 || 'اللاعب 2';
+      // حفظ الأسماء للمرة الجاية
+      try {
+        if (n1) localStorage.setItem('rps-local-name1', n1);
+        if (n2) localStorage.setItem('rps-local-name2', n2);
+      } catch (e) { /* المتصفح يمنع التخزين */ }
       state.score1 = 0;
       state.score2 = 0;
       state.round = 1;
